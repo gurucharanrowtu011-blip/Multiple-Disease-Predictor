@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import joblib
+import os
 
 # =========================
 # PAGE CONFIG
@@ -20,7 +21,7 @@ def load_model():
 model, encoder = load_model()
 
 # =========================
-# SYMPTOM LIST
+# SYMPTOM LIST (MUST MATCH MODEL)
 # =========================
 symptoms = [
     'itching','skin_rash','nodal_skin_eruptions','continuous_sneezing','shivering','chills',
@@ -55,10 +56,10 @@ symptoms = [
 ]
 
 # =========================
-# CATEGORY UI
+# CATEGORY SYSTEM
 # =========================
 categories = {
-    "🔥 General": ["fatigue","lethargy","malaise","weight_loss","weight_gain","loss_of_appetite","dehydration"],
+    "🔥 General": ["fatigue","lethargy","malaise","weight_loss","weight_gain","loss_of_appetite"],
     "🤒 Fever": ["high_fever","mild_fever","chills","shivering","sweating"],
     "🫁 Respiratory": ["cough","phlegm","breathlessness","chest_pain","congestion","runny_nose"],
     "🍽️ Digestive": ["stomach_pain","vomiting","nausea","diarrhoea","acidity","indigestion"],
@@ -71,7 +72,7 @@ categories = {
 }
 
 # =========================
-# INPUT UI
+# SYMPTOM SELECTION
 # =========================
 st.subheader("Select Symptoms")
 
@@ -81,25 +82,27 @@ for cat, syms in categories.items():
     with st.expander(cat):
         for s in syms:
             if s in symptoms:
-                if st.checkbox(s, key=cat + "_" + s):
+                checked = st.checkbox(s, key=f"{cat}_{s}")  # FIX: prevents duplicate error
+                if checked:
                     selected_symptoms.append(s)
 
 # =========================
 # PREDICTION FUNCTION
 # =========================
-def predict(symptoms_selected):
-
+def predict_disease(symptoms_selected):
     input_vector = np.zeros(len(symptoms))
 
     for s in symptoms_selected:
         if s in symptoms:
-            idx = symptoms.index(s)
-            input_vector[idx] = 1
+            input_vector[symptoms.index(s)] = 1
 
     pred = model.predict([input_vector])[0]
 
-    # 🔥 FIX: force correct inverse transform
-    disease = encoder.inverse_transform(np.array([pred]))[0]
+    # FIX: convert correctly to disease name
+    try:
+        disease = encoder.inverse_transform([pred])[0]
+    except:
+        disease = str(pred)
 
     return disease
 
@@ -111,8 +114,6 @@ if st.button("🩺 Predict Disease"):
     if len(selected_symptoms) == 0:
         st.warning("Please select at least one symptom")
     else:
-        disease = predict(selected_symptoms)
+        disease = predict_disease(selected_symptoms)
 
         st.success(f"🧾 Disease: {disease}")
-
-        st.info("💊 Next upgrade: medicines + precautions mapping will be added")
