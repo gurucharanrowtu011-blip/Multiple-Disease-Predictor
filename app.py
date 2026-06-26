@@ -1,121 +1,137 @@
 import streamlit as st
 import numpy as np
 import joblib
+import pandas as pd
 import os
 
 # =========================
 # PAGE CONFIG
 # =========================
-st.set_page_config(
-    page_title="AI Health Assistant",
-    page_icon="🩺",
-    layout="centered"
-)
+st.set_page_config(page_title="AI Virtual Doctor", layout="centered")
 
-st.title("🩺 AI Health Assistant")
-st.write("Select your symptom category and symptoms")
+st.title("🩺 AI Virtual Doctor")
+st.write("Select your symptoms like a real consultation with a doctor.")
 
 # =========================
-# SAFE LOAD MODELS
+# LOAD MODEL
 # =========================
 BASE_DIR = os.path.dirname(__file__)
 
 model = joblib.load(os.path.join(BASE_DIR, "disease_predictor_model.pkl"))
-encoder = joblib.load(os.path.join(BASE_DIR, "label_encoder.pkl"))
-symptom_dict = joblib.load(os.path.join(BASE_DIR, "symptom_dict.pkl"))
+
+# Load dataset only for symptom columns + medicine mapping
+df = pd.read_csv(os.path.join(BASE_DIR, "training.csv"))
+
+symptoms = list(df.columns[:-2])  # last 2 = prognosis, medicine
 
 # =========================
-# SYMPTOM GROUPING (CLEAN UI)
+# CATEGORY MAPPING
 # =========================
-symptom_categories = {
-    "General": [
-        "high_fever", "chills", "fatigue", "weakness_in_limbs", "malaise"
+categories = {
+    "🔥 General": [
+        "fatigue", "lethargy", "malaise", "weight_gain", "weight_loss",
+        "loss_of_appetite", "dehydration", "restlessness"
     ],
-    "Respiratory": [
-        "cough", "breathlessness", "chest_pain", "sore_throat", "runny_nose"
+    "🤒 Fever / Infection": [
+        "high_fever", "mild_fever", "chills", "shivering", "sweating"
     ],
-    "Skin": [
-        "itching", "skin_rash", "blister", "red_spots_over_body"
+    "🫁 Respiratory": [
+        "cough", "breathlessness", "chest_pain", "phlegm",
+        "runny_nose", "congestion", "throat_irritation"
     ],
-    "Digestive": [
-        "stomach_pain", "vomiting", "nausea", "acidity", "abdominal_pain"
+    "🍽️ Digestive": [
+        "stomach_pain", "abdominal_pain", "vomiting", "nausea",
+        "diarrhoea", "constipation", "acidity", "indigestion"
     ],
-    "Neurological": [
-        "headache", "dizziness", "loss_of_balance", "unsteadiness"
+    "🧠 Neurological": [
+        "headache", "dizziness", "loss_of_balance", "blurred_and_distorted_vision"
     ],
-    "Urinary": [
-        "burning_micturition", "urination_frequent"
+    "🧴 Skin": [
+        "itching", "skin_rash", "blister", "pus_filled_pimples",
+        "skin_peeling", "red_spots_over_body"
+    ],
+    "💧 Urinary": [
+        "burning_micturition", "polyuria", "dark_urine", "bladder_discomfort"
+    ],
+    "🦴 Musculoskeletal": [
+        "joint_pain", "back_pain", "neck_pain", "muscle_pain"
+    ],
+    "❤️ Cardiovascular": [
+        "chest_pain", "palpitations", "fast_heart_rate"
     ]
 }
 
 # =========================
-# UI FORM
+# SESSION STATE
 # =========================
-with st.form("form"):
-
-    age = st.number_input("Age", 0, 120, 25)
-    gender = st.radio("Gender", ["Male", "Female"])
-
-    category = st.selectbox("Choose Symptom Category", list(symptom_categories.keys()))
-    symptoms = st.multiselect("Select Symptoms", symptom_categories[category])
-
-    submit = st.form_submit_button("Predict Disease")
+if "selected_symptoms" not in st.session_state:
+    st.session_state.selected_symptoms = []
 
 # =========================
-# MEDICINE MAP (SIMPLE)
+# CATEGORY SELECT
 # =========================
-medicine_map = {
-    "Common Cold": "Paracetamol, Rest, Fluids",
-    "Dengue": "Paracetamol, Hydration",
-    "Malaria": "Antimalarial drugs (consult doctor)",
-    "Fungal infection": "Antifungal cream, Fluconazole"
-}
+st.subheader("Select Symptom Category")
+
+selected_category = st.multiselect(
+    "Choose categories",
+    list(categories.keys())
+)
 
 # =========================
-# PREDICTION
+# SHOW SYMPTOMS BASED ON CATEGORY
 # =========================
-if submit:
+st.subheader("Select Symptoms")
 
-    if len(symptoms) == 0:
+available_symptoms = []
+for cat in selected_category:
+    available_symptoms.extend(categories[cat])
+
+available_symptoms = list(set(available_symptoms))
+
+selected = st.multiselect(
+    "Your symptoms",
+    available_symptoms
+)
+
+st.session_state.selected_symptoms = selected
+
+# =========================
+# PREDICTION FUNCTION
+# =========================
+def predict_disease(symptoms_selected):
+    input_vector = [0] * len(symptoms)
+
+    for i, sym in enumerate(symptoms):
+        if sym in symptoms_selected:
+            input_vector[i] = 1
+
+    input_array = np.array([input_vector])
+
+    pred = model.predict(input_array)[0]
+
+    # medicine lookup
+    medicine = df[df["prognosis"] == pred]["medicine"].values[0]
+    disease = pred
+
+    return disease, medicine
+
+# =========================
+# PREDICT BUTTON
+# =========================
+if st.button("🔍 Predict Disease"):
+
+    if len(st.session_state.selected_symptoms) == 0:
         st.warning("Please select at least one symptom")
-        st.stop()
+    else:
+        disease, medicine = predict_disease(st.session_state.selected_symptoms)
 
-    # create 134 feature vector
-    input_vector = np.zeros(len(symptom_dict))
+        st.success("Diagnosis Complete")
 
-    for s in symptoms:
-        if s in symptom_dict:
-            input_vector[symptom_dict[s]] = 1
+        st.markdown("### 🧾 Disease")
+        st.markdown(f"**{disease}**")
 
-    pred = model.predict([input_vector])[0]
-    disease = encoder.inverse_transform([pred])[0]
+        st.markdown("### 💊 Recommended Medicine")
+        st.write(medicine)
 
-    try:
-        confidence = np.max(model.predict_proba([input_vector])) * 100
-    except:
-        confidence = None
-
-    medicine = medicine_map.get(disease, "Consult doctor for proper treatment")
-
-    # =========================
-    # OUTPUT
-    # =========================
-    st.success("Prediction Complete")
-
-    st.markdown("## 🩺 Disease")
-    st.markdown(f"### {disease}")
-
-    if confidence:
-        st.write(f"Confidence: **{confidence:.2f}%**")
-
-    st.markdown("## 💊 Medicine")
-    st.write(medicine)
-
-    st.markdown("## 🛡️ Precautions")
-    st.write("""
-    - Take rest  
-    - Drink plenty of water  
-    - Maintain hygiene  
-    - Avoid self-medication  
-    - Consult doctor if symptoms persist  
-    """)
+        st.markdown("### 🛡️ Advice")
+        st.write("Consult a doctor if symptoms persist or worsen.")
