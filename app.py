@@ -3,7 +3,7 @@ import numpy as np
 import joblib
 
 # =========================
-# LOAD MODEL
+# LOAD MODEL + ENCODER
 # =========================
 model = joblib.load("disease_predictor_model.pkl")
 encoder = joblib.load("label_encoder.pkl")
@@ -19,10 +19,10 @@ st.set_page_config(
 )
 
 st.title("🩺 AI Health Assistant")
-st.write("Select symptoms and get instant disease prediction")
+st.write("Select your symptoms and get instant prediction")
 
 # =========================
-# SYMPTOM CATEGORIES (UI ONLY)
+# SYMPTOM CATEGORIES
 # =========================
 category_map = {
     "General": ["itching", "fatigue", "weight_loss", "high_fever", "chills"],
@@ -33,95 +33,74 @@ category_map = {
     "Urinary": ["burning_micturition", "urination_frequent"]
 }
 
-categories = list(category_map.keys())
-
 # =========================
-# FORM UI (FAST + CLEAN)
+# FORM UI
 # =========================
-with st.form("prediction_form"):
-
-    st.subheader("Patient Information")
+with st.form("predict_form"):
 
     age = st.number_input("Age", 0, 120, 25)
     gender = st.radio("Gender", ["Male", "Female"])
 
-    st.subheader("Step 1: Choose Category")
+    category = st.selectbox("Choose Symptom Category", list(category_map.keys()))
+    symptoms = st.multiselect("Select Symptoms", category_map[category])
 
-    selected_category = st.selectbox(
-        "Symptom Category",
-        categories
-    )
+    submitted = st.form_submit_button("Predict")
 
-    st.subheader("Step 2: Select Symptoms")
-
-    available_symptoms = category_map[selected_category]
-
-    selected_symptoms = st.multiselect(
-        "Symptoms",
-        available_symptoms
-    )
-
-    submit = st.form_submit_button("🔍 Predict Disease")
+# =========================
+# MEDICINE MAP (BASIC)
+# =========================
+medicine_map = {
+    "Fungal infection": "Antifungal cream / Fluconazole",
+    "Common Cold": "Paracetamol, Rest, Fluids",
+    "Dengue": "Paracetamol, Hydration",
+    "Malaria": "Antimalarial treatment (consult doctor)",
+    "Pneumonia": "Antibiotics (doctor prescribed)"
+}
 
 # =========================
 # PREDICTION
 # =========================
-if submit:
+if submitted:
 
-    if len(selected_symptoms) == 0:
+    if len(symptoms) == 0:
         st.warning("Please select at least one symptom")
         st.stop()
 
-    # Build 134 feature vector
     features = np.zeros(len(symptom_dict))
 
-    for sym in selected_symptoms:
-        if sym in symptom_dict:
-            features[symptom_dict[sym]] = 1
+    for s in symptoms:
+        if s in symptom_dict:
+            features[symptom_dict[s]] = 1
 
-    # Prediction
-    pred = model.predict([features])[0]
-    disease = encoder.inverse_transform([pred])[0]
+    prediction = model.predict([features])[0]
+    disease = encoder.inverse_transform([prediction])[0]
 
-    # Confidence (optional)
     try:
-        prob = model.predict_proba([features])[0]
-        confidence = np.max(prob) * 100
+        confidence = np.max(model.predict_proba([features])) * 100
     except:
         confidence = None
-
-    # =========================
-    # MEDICINE + ADVICE (STATIC SAFE VERSION)
-    # =========================
-    medicine_map = {
-        "Fungal infection": "Antifungal cream, Fluconazole",
-        "Common Cold": "Paracetamol, Rest, Fluids",
-        "Dengue": "Paracetamol, Hydration",
-        "Malaria": "Antimalarial drugs (consult doctor)",
-        "Pneumonia": "Antibiotics (doctor prescribed)"
-    }
 
     medicine = medicine_map.get(disease, "Consult a doctor for proper medication")
 
     # =========================
-    # OUTPUT
+    # OUTPUT (CLEAN)
     # =========================
-    st.success("🩺 Prediction Complete")
+    st.success("Prediction Complete")
 
-    st.subheader("Predicted Disease")
+    st.markdown("## 🩺 Disease Identified")
     st.markdown(f"### {disease}")
 
     if confidence:
         st.write(f"Confidence: **{confidence:.2f}%**")
 
-    st.subheader("💊 Medicine")
+    st.markdown("## 💊 Medicine")
     st.write(medicine)
 
-    st.subheader("🛡️ Precautions")
+    st.markdown("## 🛡️ Precautions")
     st.write("""
-    - Take rest  
-    - Drink plenty of fluids  
+    - Take proper rest  
+    - Drink fluids  
+    - Avoid self medication  
     - Maintain hygiene  
-    - Avoid self-medication  
     - Consult doctor if symptoms persist  
     """)
