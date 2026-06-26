@@ -1,13 +1,11 @@
 import streamlit as st
 import numpy as np
 import joblib
-import pandas as pd
 
 # =========================
 # PAGE CONFIG
 # =========================
 st.set_page_config(page_title="AI Virtual Doctor", layout="wide")
-
 st.title("🩺 AI Virtual Doctor")
 
 # =========================
@@ -22,7 +20,7 @@ def load_model():
 model, encoder = load_model()
 
 # =========================
-# SYMPTOM LIST (MUST MATCH TRAINING ORDER)
+# SYMPTOM LIST
 # =========================
 symptoms = [
     'itching','skin_rash','nodal_skin_eruptions','continuous_sneezing','shivering','chills',
@@ -57,11 +55,11 @@ symptoms = [
 ]
 
 # =========================
-# CATEGORY MAP (CLEAN UI)
+# CATEGORY UI
 # =========================
 categories = {
     "🔥 General": ["fatigue","lethargy","malaise","weight_loss","weight_gain","loss_of_appetite","dehydration"],
-    "🤒 Fever/ Infection": ["high_fever","mild_fever","chills","shivering","sweating"],
+    "🤒 Fever": ["high_fever","mild_fever","chills","shivering","sweating"],
     "🫁 Respiratory": ["cough","phlegm","breathlessness","chest_pain","congestion","runny_nose"],
     "🍽️ Digestive": ["stomach_pain","vomiting","nausea","diarrhoea","acidity","indigestion"],
     "🧠 Neurological": ["headache","dizziness","loss_of_balance","slurred_speech","altered_sensorium"],
@@ -73,9 +71,9 @@ categories = {
 }
 
 # =========================
-# UI INPUT
+# INPUT UI
 # =========================
-st.subheader("Select Symptoms by Category")
+st.subheader("Select Symptoms")
 
 selected_symptoms = []
 
@@ -83,13 +81,14 @@ for cat, syms in categories.items():
     with st.expander(cat):
         for s in syms:
             if s in symptoms:
-               if st.checkbox(s, key=cat + "_" + s):
-                   selected_symptoms.append(s)
+                if st.checkbox(s, key=cat + "_" + s):
+                    selected_symptoms.append(s)
 
 # =========================
-# PREDICTION
+# PREDICTION FUNCTION
 # =========================
 def predict(symptoms_selected):
+
     input_vector = np.zeros(len(symptoms))
 
     for s in symptoms_selected:
@@ -98,7 +97,9 @@ def predict(symptoms_selected):
             input_vector[idx] = 1
 
     pred = model.predict([input_vector])[0]
-    disease = encoder.inverse_transform([pred])[0]
+
+    # 🔥 FIX: force correct inverse transform
+    disease = encoder.inverse_transform(np.array([pred]))[0]
 
     return disease
 
@@ -114,4 +115,4 @@ if st.button("🩺 Predict Disease"):
 
         st.success(f"🧾 Disease: {disease}")
 
-        st.info("💊 Medicines & precautions will be added from dataset mapping (next upgrade)")
+        st.info("💊 Next upgrade: medicines + precautions mapping will be added")
