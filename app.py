@@ -83,8 +83,8 @@ for cat, syms in categories.items():
     with st.expander(cat):
         for s in syms:
             if s in symptoms:
-                if st.checkbox(s):
-                    selected_symptoms.append(s)
+               if st.checkbox(s, key=cat + "_" + s):
+                   selected_symptoms.append(s)
 
 # =========================
 # PREDICTION
