@@ -22,25 +22,7 @@ model, encoder = load_model()
 # =========================
 # FULL SYMPTOM LIST (MUST MATCH TRAINING ORDER)
 # =========================
-symptoms = [
-    'itching','skin_rash','nodal_skin_eruptions','continuous_sneezing','shivering','chills',
-    'joint_pain','stomach_pain','acidity','ulcers_on_tongue','muscle_wasting','vomiting',
-    'burning_micturition','spotting_ urination','fatigue','weight_gain','anxiety',
-    'cold_hands_and_feets','mood_swings','weight_loss','restlessness','lethargy',
-    'patches_in_throat','irregular_sugar_level','cough','high_fever','breathlessness',
-    'sweating','dehydration','indigestion','headache','yellowish_skin','dark_urine',
-    'nausea','loss_of_appetite','back_pain','constipation','abdominal_pain','diarrhoea',
-    'mild_fever','yellow_urine','yellowing_of_eyes','phlegm','throat_irritation',
-    'runny_nose','congestion','chest_pain','fast_heart_rate','dizziness','cramps',
-    'bruising','obesity','swollen_legs','swollen_blood_vessels','puffy_face_and_eyes',
-    'enlarged_thyroid','muscle_weakness','stiff_neck','swelling_joints',
-    'movement_stiffness','loss_of_balance','bladder_discomfort','continuous_feel_of_urine',
-    'depression','irritability','muscle_pain','altered_sensorium','red_spots_over_body',
-    'increased_appetite','polyuria','family_history','mucoid_sputum','lack_of_concentration',
-    'visual_disturbances','coma','stomach_bleeding','distention_of_abdomen',
-    'blood_in_sputum','palpitations','painful_walking','blackheads','skin_peeling',
-    'blister','pus_filled_pimples','yellow_crust_ooze','loss_of_smell'
-]
+symptoms = list(model.feature_names_in_)
 
 # =========================
 # CATEGORY SYSTEM (MORE COMPLETE)
