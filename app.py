@@ -37,14 +37,82 @@ df.columns = df.columns.str.strip()
 # SYMPTOM CATEGORIES
 # =========================
 categories = {
-    "General": ["fatigue", "chills", "weight_loss", "weight_gain", "malaise"],
-    "Respiratory": ["cough", "breathlessness", "phlegm", "runny_nose", "congestion"],
-    "Digestive": ["stomach_pain", "vomiting", "acidity", "nausea", "abdominal_pain"],
-    "Skin": ["itching", "skin_rash", "blister", "red_spots_over_body"],
-    "Neurological": ["headache", "dizziness", "loss_of_balance", "unsteadiness"],
-    "Urinary": ["burning_micturition", "spotting_ urination", "polyuria"],
-    "Musculoskeletal": ["joint_pain", "muscle_pain", "knee_pain", "stiff_neck"],
-    "Cardio": ["chest_pain", "palpitations", "fast_heart_rate"]
+    # 1. GENERAL / CONSTITUTIONAL
+    "General": [
+        "fatigue", "lethargy", "malaise", "restlessness",
+        "anxiety", "depression", "irritability",
+        "loss_of_appetite", "weight_gain", "weight_loss",
+        "dehydration"
+    ],
+
+    # 2. FEVER / INFECTION
+    "Fever / Infection": [
+        "high_fever", "mild_fever", "chills", "shivering",
+        "sweating", "toxic_look_(typhos)"
+    ],
+
+    # 3. RESPIRATORY
+    "Respiratory": [
+        "cough", "phlegm", "mucoid_sputum", "rusty_sputum",
+        "throat_irritation", "runny_nose", "congestion",
+        "breathlessness", "chest_pain", "fast_heart_rate",
+        "blood_in_sputum", "loss_of_smell"
+    ],
+
+    # 4. DIGESTIVE
+    "Digestive": [
+        "stomach_pain", "abdominal_pain", "constipation",
+        "diarrhoea", "indigestion", "nausea", "vomiting",
+        "acidity", "ulcers_on_tongue", "heartburn",
+        "bloody_stool", "passage_of_gases"
+    ],
+
+    # 5. NEUROLOGICAL
+    "Neurological": [
+        "headache", "dizziness", "spinning_movements",
+        "loss_of_balance", "unsteadiness", "slurred_speech",
+        "altered_sensorium", "weakness_of_one_body_side",
+        "visual_disturbances", "blurred_and_distorted_vision"
+    ],
+
+    # 6. SKIN / DERMATOLOGICAL
+    "Skin": [
+        "itching", "skin_rash", "nodal_skin_eruptions",
+        "red_spots_over_body", "pus_filled_pimples",
+        "blackheads", "scurring", "skin_peeling",
+        "blister", "red_sore_around_nose",
+        "yellow_crust_ooze", "bruising"
+    ],
+
+    # 7. URINARY / KIDNEY
+    "Urinary": [
+        "burning_micturition", "continuous_feel_of_urine",
+        "bladder_discomfort", "polyuria",
+        "Urinating_a_lot", "foul_smell_of urine",
+        "dark_urine", "yellow_urine", "spotting_ urination"
+    ],
+
+    # 8. CARDIOVASCULAR
+    "Cardiovascular": [
+        "chest_pain", "palpitations", "fast_heart_rate",
+        "swollen_blood_vessels", "prominent_veins_on_calf"
+    ],
+
+    # 9. MUSCULOSKELETAL
+    "Musculoskeletal": [
+        "joint_pain", "back_pain", "neck_pain", "knee_pain",
+        "hip_joint_pain", "muscle_pain", "muscle_weakness",
+        "swelling_joints", "movement_stiffness",
+        "painful_walking", "cramps"
+    ],
+
+    # 10. METABOLIC / ENDOCRINE
+    "Metabolic": [
+        "obesity", "enlarged_thyroid",
+        "irregular_sugar_level",
+        "increased_appetite",
+        "weight_gain", "weight_loss"
+    ]
 }
 
 # =========================
